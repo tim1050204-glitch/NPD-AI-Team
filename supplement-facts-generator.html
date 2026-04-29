@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplement Facts Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        
+        .step-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .step-pill {
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 999px;
+            background: #f0f0f0;
+            color: #666;
+            font-weight: 400;
+            transition: all 0.3s;
+        }
+        
+        .step-pill.active {
+            background: #3b82f6;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .step-content {
+            display: none;
+        }
+        
+        .step-content.active {
+            display: block;
+        }
+        
+        .upload-box {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 36px;
+            text-align: center;
+            background: #fafafa;
+            margin-bottom: 12px;
+        }
+        
+        .upload-box p {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .upload-box input[type="file"] {
+            padding: 8px;
+            font-size: 13px;
+        }
+        
+        .upload-note {
+            font-size: 11px;
+            color: #666;
+            margin-top: 16px;
+            line-height: 1.5;
+        }
+        
+        button {
+            padding: 10px 22px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.3s;
+            margin-right: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .error {
+            color: #dc2626;
+            font-size: 13px;
+            padding: 8px 12px;
+            background: #fee2e2;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+        
+        .success-msg {
+            color: #059669;
+            font-size: 12px;
+            display: inline-block;
+            margin-left: 12px;
+            align-self: center;
+        }
+        
+        .form-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .form-field {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-field label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+        }
+        
+        .form-field input {
+            width: 100%;
+            font-size: 14px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .ingredients-section {
+            margin-top: 20px;
+        }
+        
+        .ingredients-section h3 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .ingredients-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border: 0.5px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        th {
+            text-align: left;
+            padding: 8px 10px;
+            background: #f3f4f6;
+            color: #666;
+            font-weight: 500;
+            font-size: 11px;
+            border-bottom: 0.5px solid #ddd;
+        }
+        
+        td {
+            padding: 8px 10px;
+            border-bottom: 0.5px solid #ddd;
+            vertical-align: middle;
+        }
+        
+        td input {
+            width: 100%;
+            font-size: 12px;
+            padding: 3px 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        td input.override {
+            background: #FFF7D6;
+        }
+        
+        .source-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        
+        .source-fda {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .source-manual {
+            background: #fef3c7;
+            color: #854d0e;
+        }
+        
+        .source-none {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* SF Panel Styles */
+        .sf-panel {
+            border: 3px solid #000;
+            width: 420px;
+            background: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.1;
+            color: #000;
+        }
+        
+        .sf-title {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1;
+            padding: 6px 12px;
+            text-align: center;
+        }
+        
+        .sf-serving-box {
+            padding: 5px 12px;
+        }
+        
+        .sf-serving {
+            font-size: 12px;
+            margin: 3px 0;
+        }
+        
+        .sf-serving strong {
+            font-weight: 700;
+        }
+        
+        .thick-bar {
+            background: #000;
+            height: 10px;
+        }
+        
+        .med-bar {
+            background: #000;
+            height: 5px;
+        }
+        
+        .sf-row {
+            display: flex;
+            padding: 3px 10px;
+            border-bottom: 1px solid #000;
+            align-items: center;
+            min-height: 22px;
+            font-size: 12px;
+        }
+        
+        .sf-row.bold {
+            font-weight: 700;
+        }
+        
+        .sf-row.indent1 {
+            padding-left: 26px;
+        }
+        
+        .sf-label {
+            flex: 2.2;
+            color: #000;
+        }
+        
+        .sf-val {
+            flex: 1;
+            text-align: right;
+            color: #000;
+        }
+        
+        .sf-dv {
+            flex: 0.9;
+            text-align: right;
+            color: #000;
+        }
+        
+        .sf-header-row {
+            display: flex;
+            padding: 3px 10px;
+            font-weight: 700;
+            font-size: 12px;
+            color: #000;
+        }
+        
+        .sf-footer {
+            padding: 6px 12px;
+            font-size: 10px;
+            color: #000;
+            line-height: 1.6;
+        }
+        
+        .other-ingredients {
+            font-size: 11px;
+            color: #000;
+            margin-top: 10px;
+            line-height: 1.6;
+            width: 420px;
+        }
+        
+        .result-wrapper {
+            display: flex;
+            gap: 32px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+        
+        .result-panel {
+            flex: 1;
+            min-width: 500px;
+        }
+        
+        .breakdown-box {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .breakdown-box p {
+            margin: 0 0 6px;
+            font-weight: 500;
+        }
+        
+        .breakdown-code {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.7;
+            margin: 6px 0 0;
+        }
+        
+        .button-group {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supplement Facts Generator</h1>
+        <p class="subtitle">Upload a formula Excel file → review ingredients → generate FDA-compliant Supplement Facts panel automatically.</p>
+        
+        <div class="step-bar">
+            <div class="step-pill active" data-step="upload">1. Upload</div>
+            <div class="step-pill" data-step="review">2. Review</div>
+            <div class="step-pill" data-step="result">3. Generate</div>
+        </div>
+        
+        <!-- STEP 1: UPLOAD -->
+        <div id="step-upload" class="step-content active">
+            <div class="upload-box">
+                <p>Upload your formula Excel (.xlsx)</p>
+                <input type="file" id="file-input" accept=".xlsx,.xls">
+                <p class="upload-note">
+                    Expected columns: D = Ingredient name (English), one of N/J/K = serving amount (mg), O/P = label claim (optional).<br>
+                    Or use the demo data button below to skip upload.
+                </p>
+            </div>
+            
+            <button class="btn-secondary" onclick="loadDemoData()">Load demo data (Methodiq formula)</button>
+            <div id="upload-error"></div>
+        </div>
+        
+        <!-- STEP 2: REVIEW -->
+        <div id="step-review" class="step-content">
+            <div class="form-group">
+                <div class="form-field" style="flex: 2;">
+                    <label>Product name</label>
+                    <input type="text" id="product-name" placeholder="e.g. Methodiq Gut Health Liquid">
+                </div>
+                <div class="form-field">
+                    <label>Serving size</label>
+                    <input type="text" id="serving-size" placeholder="e.g. 15 mL (1 tablespoon)">
+                </div>
+                <div class="form-field">
+                    <label>Servings per container</label>
+                    <input type="text" id="servings-container" placeholder="e.g. 27">
+                </div>
+            </div>
+            
+            <div class="ingredients-section">
+                <h3>Ingredients (<span id="ing-count">0</span>)</h3>
+                <p class="ingredients-info">
+                    Edit names, amounts, and override any FDA nutrition value. Yellow highlight = manual override. Add a "Label claim" to make an ingredient an active dietary ingredient. Use "Notes" for parenthetical info shown below the label claim (e.g. "2 Billion CFU").
+                </p>
+                <div class="table-wrapper">
+                    <table id="ingredients-table">
+                        <thead>
+                            <tr>
+                                <th>Inc.</th>
+                                <th>Ingredient name</th>
+                                <th>mg/serv</th>
+                                <th>Label claim</th>
+                                <th>Notes</th>
+                                <th>kcal/100g</th>
+                                <th>Carb g/100g</th>
+                                <th>Fiber g/100g</th>
+                                <th>Sugar g/100g</th>
+                                <th>Protein g/100g</th>
+                                <th>Fat g/100g</th>
+                                <th>Sodium mg/100g</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingredients-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="calculateNutrition()">Generate Supplement Facts →</button>
+                <button class="btn-secondary" onclick="goToStep('upload')">Back</button>
+            </div>
+        </div>
+        
+        <!-- STEP 3: RESULT -->
+        <div id="step-result" class="step-content">
+            <div class="result-wrapper">
+                <!-- SF Panel -->
+                <div>
+                    <p style="font-size: 14px; font-weight: 500; margin: 0 0 10px;">Generated supplement facts panel</p>
+                    <div id="sf-panel-container" class="sf-panel"></div>
+                    <div id="other-ingredients" class="other-ingredients"></div>
+                </div>
+                
+                <!-- Breakdown -->
+                <div class="result-panel">
+                    <p style="font-size: 14px; font-weight: 500; margin: 0 0 10px;">Calculation breakdown</p>
+                    <div id="breakdown-container"></div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="exportExcel()">Download Excel</button>
+                <button class="btn-primary" onclick="exportPDF()">Download PDF</button>
+                <button class="btn-secondary" onclick="goToStep('review')">← Edit ingredients</button>
+                <button class="btn-secondary" onclick="reset()">Start over</button>
+                <span id="export-msg"></span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================================
+        // FDA NUTRITION DATABASE
+        // ============================================================
+        const NUTRITION_DB = {
+            "apple cider vinegar powder": { kcal: 75, carb: 18.0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Spray-dried with maltodextrin carrier (estimated)", cleanLabelName: "Apple cider vinegar powder" },
+            "apple juice concentrate": { kcal: 46, carb: 11.3, fiber: 0.2, sugar: 9.6, protein: 0.1, fat: 0, sodium: 4, note: "USDA #173951 — reconstituted single-strength (1:6 dilution)", reconstituteRatio: 6, cleanLabelName: "Apple juice concentrate" },
+            "turmeric extract powder": { kcal: 312, carb: 67.1, fiber: 22.7, sugar: 3.2, protein: 9.7, fat: 3.3, sodium: 27, note: "USDA #172231 — ground turmeric", botanical: { genus: "Curcuma", species: "longa", part: "rhizome", common: "Turmeric" }, cleanLabelName: "Turmeric (Curcuma longa, rhizome) extract" },
+            "turmeric": { kcal: 312, carb: 67.1, fiber: 22.7, sugar: 3.2, protein: 9.7, fat: 3.3, sodium: 27, note: "USDA #172231", botanical: { genus: "Curcuma", species: "longa", part: "rhizome", common: "Turmeric" }, cleanLabelName: "Turmeric (Curcuma longa, rhizome) extract" },
+            "xanthan gum": { kcal: 333, carb: 78.3, fiber: 78.3, sugar: 0, protein: 0, fat: 0, sodium: 3000, note: "USDA — soluble fiber", cleanLabelName: "Xanthan gum" },
+            "erythritol": { kcal: 20, carb: 100, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "FDA atwater factor 0.2 kcal/g", isSugarAlcohol: true, cleanLabelName: "Erythritol" },
+            "dl-malic acid": { kcal: 100, carb: 100, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Organic acid — atwater factor 1 kcal/g", cleanLabelName: "Malic acid" },
+            "malic acid": { kcal: 100, carb: 100, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Organic acid — atwater factor 1 kcal/g", cleanLabelName: "Malic acid" },
+            "sucralose": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Non-nutritive sweetener (negligible at use levels)", cleanLabelName: "Sucralose" },
+            "natural flavour": { kcal: 200, carb: 50, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Liquid flavor blend (estimated)", flavorGroup: true, cleanLabelName: "Natural flavors" },
+            "natural flavor": { kcal: 200, carb: 50, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Liquid flavor blend (estimated)", flavorGroup: true, cleanLabelName: "Natural flavors" },
+            "lemon flavour": { kcal: 200, carb: 50, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Liquid flavor blend (estimated)", flavorGroup: true, cleanLabelName: "Natural flavors" },
+            "lemon flavor": { kcal: 200, carb: 50, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Liquid flavor blend (estimated)", flavorGroup: true, cleanLabelName: "Natural flavors" },
+            "bitterness masking flavor": { kcal: 200, carb: 50, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Liquid flavor blend (estimated)", flavorGroup: true, cleanLabelName: "Natural flavors" },
+            "sodium benzoate": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 16000, note: "Preservative — 16% elemental Na", cleanLabelName: "Sodium benzoate (preservative)" },
+            "water": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "—", cleanLabelName: "Water" },
+            "vitamin e": { kcal: 350, carb: 70, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Dry blend ~50% starch carrier (estimated)", cleanLabelName: "Vitamin E (antioxidant)" },
+            "dry vitamin e": { kcal: 350, carb: 70, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Dry blend ~50% starch carrier (estimated)", cleanLabelName: "Vitamin E (antioxidant)" },
+            "chromium picolinate": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Mineral chelate — 12.45% elemental Cr", elementalPct: 12.45, mineralName: "Chromium", mineralForm: "Chromium Picolinate", mineralUnit: "mcg", mineralDV: 35, isMineral: true, cleanLabelName: "Chromium picolinate" },
+            "weissella coagulans": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Probiotic spore powder — negligible", cleanLabelName: "Weissella coagulans" },
+            "w. coagulans": { kcal: 0, carb: 0, fiber: 0, sugar: 0, protein: 0, fat: 0, sodium: 0, note: "Probiotic spore powder — negligible", cleanLabelName: "Weissella coagulans" },
+        };
+        
+        const DV = {
+            totalFat: 78, satFat: 20, cholesterol: 300, sodium: 2300, totalCarb: 275, fiber: 28, addedSugars: 50, protein: 50,
+            vitaminD: 20, calcium: 1300, iron: 18, potassium: 4700, vitaminA: 900, vitaminC: 90, vitaminE: 15, vitaminK: 120,
+            thiamin: 1.2, riboflavin: 1.3, niacin: 16, vitaminB6: 1.7, folate: 400, vitaminB12: 2.4, biotin: 30, pantothenicAcid: 5,
+            phosphorus: 1250, iodine: 150, magnesium: 420, zinc: 11, selenium: 55, copper: 0.9, manganese: 2.3, chromium: 35, molybdenum: 45, chloride: 2300,
+        };
+        
+        // ============================================================
+        // STATE
+        // ============================================================
+        let ingredients = [];
+        let calcResult = null;
+        
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        function lookupNutrition(name) {
+            const lower = (name || "").toLowerCase().trim();
+            if (NUTRITION_DB[lower]) return NUTRITION_DB[lower];
+            for (const key of Object.keys(NUTRITION_DB)) {
+                if (lower.includes(key) || key.includes(lower)) return NUTRITION_DB[key];
+            }
+            return null;
+        }
+        
+        function roundCalories(kcal) {
+            if (kcal < 5) return 0;
+            if (kcal <= 50) return Math.round(kcal);
+            return Math.round(kcal / 5) * 5;
+        }
+        
+        function roundFat(g) {
+            if (g < 0.5) return 0;
+            if (g < 5) return Math.round(g * 2) / 2;
+            return Math.round(g);
+        }
+        
+        function roundCarb(g) {
+            if (g < 0.5) return 0;
+            if (g < 1) return "<1";
+            return Math.round(g);
+        }
+        
+        function roundSodium(mg) {
+            if (mg < 5) return 0;
+            if (mg <= 140) return Math.round(mg / 5) * 5;
+            return Math.round(mg / 10) * 10;
+        }
+        
+        function roundProtein(g) {
+            if (g < 0.5) return 0;
+            if (g < 1) return "<1";
+            return Math.round(g);
+        }
+        
+        function roundSugar(g) {
+            if (g < 0.5) return 0;
+            if (g < 1) return "<1";
+            return Math.round(g);
+        }
+        
+        function cleanIngredientName(name) {
+            if (!name) return "";
+            let cleaned = name
+                .replace(/\s+\d{4,}\s*$/g, "")
+                .replace(/\s+P\(F\)\s*$/i, "")
+                .replace(/\s+\(\s*creat?\s*\)\s*$/i, "")
+                .replace(/^Dry\s+/i, "")
+                .replace(/\s+powder\s*$/i, " powder")
+                .replace(/\s+liquid\s*$/i, "")
+                .trim();
+            if (cleaned.length === 0) return "";
+            return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+        }
+        
+        function formatLabelClaim(claim) {
+            if (!claim) return "";
+            const trimmed = claim.trim();
+            if (/cfu|iu|mcg|ug|µg|%/i.test(trimmed)) return trimmed;
+            if (/\(.*\)/.test(trimmed)) {
+                const match = trimmed.match(/^([\d.,]+)\s*(mg|g)?\s*(\(.*\))$/i);
+                if (match) {
+                    const num = parseFloat(match[1].replace(/,/g, ""));
+                    const unit = (match[2] || "mg").toLowerCase();
+                    const rest = match[3];
+                    const formatted = formatAmount(num, unit);
+                    return `${formatted} ${rest}`;
+                }
+                return trimmed;
+            }
+            const match = trimmed.match(/^([\d.,]+)\s*(mg|g)?$/i);
+            if (match) {
+                const num = parseFloat(match[1].replace(/,/g, ""));
+                const unit = (match[2] || "mg").toLowerCase();
+                return formatAmount(num, unit);
+            }
+            return trimmed;
+        }
+        
+        function formatAmount(num, unit) {
+            let mg = unit === "g" ? num * 1000 : num;
+            if (mg >= 1000) {
+                const g = mg / 1000;
+                const gStr = g % 1 === 0 ? g.toString() : g.toFixed(1).replace(/\.0$/, "");
+                return `${gStr} g`;
+            }
+            const mgStr = mg % 1 === 0 ? mg.toString() : mg.toFixed(2).replace(/\.?0+$/, "");
+            return `${mgStr} mg`;
+        }
+        
+        function goToStep(step) {
+            document.querySelectorAll('.step-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.step-pill').forEach(e => e.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            document.querySelector(`.step-pill[data-step="${step}"]`).classList.add('active');
+        }
+        
+        // ============================================================
+        // FILE UPLOAD
+        // ============================================================
+        document.getElementById('file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const data = await file.arrayBuffer();
+                const wb = XLSX.read(data, { type: "array" });
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+                
+                const parsed = [];
+                const startRow = (typeof rows[0]?.[0] === "string" && (rows[0][0] === "元件" || rows[0][3]?.toString().toLowerCase().includes("ingredient"))) ? 1 : 0;
+                
+                for (let i = startRow; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    const englishName = (row[3] || "").toString().trim();
+                    const chineseName = (row[1] || "").toString().trim();
+                    const name = englishName || chineseName;
+                    
+                    if (!name) continue;
+                    
+                    let servingAmount = 0;
+                    const possibleCols = [13, 9, 10, 11, 12];
+                    for (const c of possibleCols) {
+                        const v = parseFloat(row[c]?.toString().replace(/,/g, "") || "0");
+                        if (v && !isNaN(v) && v > 0) {
+                            servingAmount = v;
+                            break;
+                        }
+                    }
+                    
+                    if (servingAmount === 0) continue;
+                    if (name.toLowerCase().includes("total") || name === "總計") continue;
+                    
+                    const labelClaim = (row[14] || row[15] || "").toString().trim();
+                    
+                    parsed.push({
+                        name,
+                        servingMg: servingAmount,
+                        unit: "mg",
+                        labelClaim,
+                        notes: "",
+                        include: true,
+                    });
+                }
+                
+                if (parsed.length === 0) {
+                    document.getElementById('upload-error').innerHTML = '<div class="error">No ingredients found in the Excel file.</div>';
+                    return;
+                }
+                
+                ingredients = parsed;
+                document.getElementById('product-name').value = "New Product";
+                document.getElementById('serving-size').value = `${(parsed.reduce((s, p) => s + p.servingMg, 0) / 1000).toFixed(1)} mL`;
+                document.getElementById('servings-container').value = "30";
+                
+                renderIngredientsTable();
+                goToStep('review');
+                document.getElementById('upload-error').innerHTML = '';
+            } catch (err) {
+                document.getElementById('upload-error').innerHTML = `<div class="error">Failed to parse Excel: ${err.message}</div>`;
+            }
+        });
+        
+        // ============================================================
+        // RENDER INGREDIENTS TABLE
+        // ============================================================
+        function renderIngredientsTable() {
+            const tbody = document.getElementById('ingredients-tbody');
+            tbody.innerHTML = '';
+            document.getElementById('ing-count').textContent = ingredients.length;
+            
+            ingredients.forEach((ing, i) => {
+                const data = lookupNutrition(ing.name);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" ${ing.include ? 'checked' : ''} onchange="ingredients[${i}].include = this.checked; renderIngredientsTable();"></td>
+                    <td><input type="text" value="${ing.name}" onchange="ingredients[${i}].name = this.value;"></td>
+                    <td><input type="number" step="0.01" value="${ing.servingMg}" onchange="ingredients[${i}].servingMg = parseFloat(this.value) || 0;"></td>
+                    <td><input type="text" value="${ing.labelClaim}" onchange="ingredients[${i}].labelClaim = this.value;" placeholder="e.g. 400 mg"></td>
+                    <td><input type="text" value="${ing.notes || ''}" onchange="ingredients[${i}].notes = this.value;" placeholder="e.g. 2 Billion CFU"></td>
+                    <td><input type="text" value="${ing.kcalOverride !== undefined ? ing.kcalOverride : (data?.kcal ?? 0)}" onchange="ingredients[${i}].kcalOverride = this.value;" class="${ing.kcalOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.carbOverride !== undefined ? ing.carbOverride : (data?.carb ?? 0)}" onchange="ingredients[${i}].carbOverride = this.value;" class="${ing.carbOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.fiberOverride !== undefined ? ing.fiberOverride : (data?.fiber ?? 0)}" onchange="ingredients[${i}].fiberOverride = this.value;" class="${ing.fiberOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.sugarOverride !== undefined ? ing.sugarOverride : (data?.sugar ?? 0)}" onchange="ingredients[${i}].sugarOverride = this.value;" class="${ing.sugarOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.proteinOverride !== undefined ? ing.proteinOverride : (data?.protein ?? 0)}" onchange="ingredients[${i}].proteinOverride = this.value;" class="${ing.proteinOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.fatOverride !== undefined ? ing.fatOverride : (data?.fat ?? 0)}" onchange="ingredients[${i}].fatOverride = this.value;" class="${ing.fatOverride !== undefined ? 'override' : ''}"></td>
+                    <td><input type="text" value="${ing.sodiumOverride !== undefined ? ing.sodiumOverride : (data?.sodium ?? 0)}" onchange="ingredients[${i}].sodiumOverride = this.value;" class="${ing.sodiumOverride !== undefined ? 'override' : ''}"></td>
+                    <td><span class="source-badge ${data ? 'source-fda' : (Object.keys(ing).some(k => k.includes('Override')) ? 'source-manual' : 'source-none')}">${data ? '✓ FDA' : (Object.keys(ing).some(k => k.includes('Override')) ? 'Override' : 'Manual')}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // ============================================================
+        // LOAD DEMO DATA
+        // ============================================================
+        function loadDemoData() {
+            ingredients = [
+                { name: "W. coagulans Spore 11", servingMg: 177.80, unit: "mg", labelClaim: "50 mg", notes: "2 Billion CFU", include: true },
+                { name: "Apple Cider Vinegar Powder", servingMg: 444.47, unit: "mg", labelClaim: "400 mg", notes: "", include: true },
+                { name: "Chromium Picolinate", servingMg: 3.60, unit: "mg", labelClaim: "400 mcg", notes: "", include: true },
+                { name: "Turmeric Extract Powder", servingMg: 168.47, unit: "mg", labelClaim: "72 mg", notes: "", include: true },
+                { name: "Dry Vitamin E", servingMg: 266.67, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Xanthan Gum", servingMg: 53.33, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Apple Juice Concentrate", servingMg: 2666.67, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Erythritol", servingMg: 400, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "DL-Malic Acid", servingMg: 40, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Sucralose", servingMg: 2.67, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Natural Mixed Berry Flavour", servingMg: 53.33, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Lemon Flavour", servingMg: 32, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Bitterness Masking Flavor Liquid", servingMg: 16, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Sodium Benzoate", servingMg: 13.33, unit: "mg", labelClaim: "", notes: "", include: true },
+                { name: "Water", servingMg: 22328.33, unit: "mg", labelClaim: "", notes: "", include: true },
+            ];
+            
+            document.getElementById('product-name').value = "Methodiq Gut Health Liquid";
+            document.getElementById('serving-size').value = "15 mL (1 tablespoon)";
+            document.getElementById('servings-container').value = "27";
+            
+            renderIngredientsTable();
+            goToStep('review');
+        }
+        
+        // ============================================================
+        // CALCULATE NUTRITION
+        // ============================================================
+        function calculateNutrition() {
+            let totalKcal = 0, totalCarb = 0, totalFiber = 0, totalSugar = 0;
+            let totalProtein = 0, totalFat = 0, totalSodium = 0, totalSugarAlcohol = 0;
+            
+            const breakdown = [];
+            const minerals = [];
+            const otherIngrItems = [];
+            
+            for (const ing of ingredients) {
+                if (!ing.include) continue;
+                
+                const data = lookupNutrition(ing.name);
+                const mg = ing.servingMg;
+                const grams = mg / 1000;
+                
+                let factor = 1;
+                if (data?.reconstituteRatio) factor = data.reconstituteRatio;
+                const effectiveGrams = grams * factor;
+                
+                const parseOverride = (raw, fallback) => {
+                    if (raw === undefined) return fallback;
+                    if (raw === "" || raw === null) return 0;
+                    const n = parseFloat(raw);
+                    return Number.isFinite(n) ? n : 0;
+                };
+                
+                const kcalPer100g = parseOverride(ing.kcalOverride, data?.kcal ?? 0);
+                const carbPer100g = parseOverride(ing.carbOverride, data?.carb ?? 0);
+                const fiberPer100g = parseOverride(ing.fiberOverride, data?.fiber ?? 0);
+                const sugarPer100g = parseOverride(ing.sugarOverride, data?.sugar ?? 0);
+                const proteinPer100g = parseOverride(ing.proteinOverride, data?.protein ?? 0);
+                const fatPer100g = parseOverride(ing.fatOverride, data?.fat ?? 0);
+                const sodiumPer100g = parseOverride(ing.sodiumOverride, data?.sodium ?? 0);
+                
+                const kcal = (effectiveGrams * kcalPer100g) / 100;
+                const carb = (effectiveGrams * carbPer100g) / 100;
+                const fiber = (effectiveGrams * fiberPer100g) / 100;
+                const sugar = (effectiveGrams * sugarPer100g) / 100;
+                const protein = (effectiveGrams * proteinPer100g) / 100;
+                const fat = (effectiveGrams * fatPer100g) / 100;
+                const sodium = (effectiveGrams * sodiumPer100g) / 100;
+                
+                if (data?.isSugarAlcohol) totalSugarAlcohol += grams;
+                
+                totalKcal += kcal;
+                totalCarb += carb;
+                totalFiber += fiber;
+                totalSugar += sugar;
+                totalProtein += protein;
+                totalFat += fat;
+                totalSodium += sodium;
+                
+                if (data?.isMineral && data?.elementalPct) {
+                    const elementalMg = mg * (data.elementalPct / 100);
+                    const elementalAmount = data.mineralUnit === "mcg" ? elementalMg * 1000 : elementalMg;
+                    const dvPct = data.mineralDV ? Math.round((elementalAmount / data.mineralDV) * 100) : null;
+                    minerals.push({
+                        name: `${data.mineralName} (as ${data.mineralForm})`,
+                        amount: Math.round(elementalAmount),
+                        unit: data.mineralUnit,
+                        dv: dvPct,
+                    });
+                }
+                
+                breakdown.push({
+                    name: ing.name,
+                    mg, grams, factor, data,
+                    kcal, carb, fiber, sugar, protein, fat, sodium,
+                });
+            }
+            
+            const rounded = {
+                cal: roundCalories(totalKcal),
+                fat: roundFat(totalFat),
+                carb: roundCarb(totalCarb),
+                fiber: roundCarb(totalFiber),
+                sugar: roundSugar(totalSugar),
+                sugarAlcohol: totalSugarAlcohol >= 0.5 ? Math.round(totalSugarAlcohol * 10) / 10 : 0,
+                protein: roundProtein(totalProtein),
+                sodium: roundSodium(totalSodium),
+            };
+            
+            const display = {
+                cal: rounded.cal > 0,
+                fat: rounded.fat > 0,
+                carb: rounded.carb !== 0,
+                fiber: rounded.fiber !== 0,
+                sugar: rounded.sugar !== 0,
+                sugarAlcohol: rounded.sugarAlcohol > 0,
+                protein: rounded.protein !== 0,
+                sodium: rounded.sodium > 0,
+            };
+            
+            const dvPercent = {
+                fat: typeof rounded.fat === "number" ? Math.round((rounded.fat / DV.totalFat) * 100) : 0,
+                carb: typeof rounded.carb === "number" ? Math.max(1, Math.round((rounded.carb / DV.totalCarb) * 100)) : 0,
+                fiber: typeof rounded.fiber === "number" ? Math.round((rounded.fiber / DV.fiber) * 100) : 0,
+                protein: typeof rounded.protein === "number" ? Math.round((rounded.protein / DV.protein) * 100) : 0,
+                sodium: typeof rounded.sodium === "number" ? Math.max(1, Math.round((rounded.sodium / DV.sodium) * 100)) : 0,
+            };
+            
+            const actives = ingredients.filter(i => i.include && i.labelClaim).filter(i => {
+                const d = lookupNutrition(i.name);
+                return !d?.isMineral;
+            }).map(i => {
+                const d = lookupNutrition(i.name);
+                let displayName = i.name;
+                if (d?.botanical) {
+                    displayName = `${d.botanical.common} (${d.botanical.genus} ${d.botanical.species}, ${d.botanical.part}) extract`;
+                }
+                const formattedClaim = formatLabelClaim(i.labelClaim);
+                return {
+                    ...i,
+                    displayName,
+                    labelClaim: formattedClaim,
+                    notes: i.notes || "",
+                };
+            });
+            
+            const isFlavorIngredient = (name) => {
+                const lower = (name || "").toLowerCase();
+                return lower.includes("flavor") || lower.includes("flavour") || lower.includes("flavoring");
+            };
+            
+            const otherSet = ingredients.filter(i => i.include && !i.labelClaim).filter(i => {
+                const d = lookupNutrition(i.name);
+                return !d?.isMineral;
+            });
+            
+            const grouped = {};
+            for (const i of otherSet) {
+                const d = lookupNutrition(i.name);
+                let cleanName;
+                if (d?.flavorGroup || isFlavorIngredient(i.name)) {
+                    cleanName = "Natural flavors";
+                } else {
+                    cleanName = d?.cleanLabelName || cleanIngredientName(i.name);
+                }
+                if (!grouped[cleanName]) {
+                    grouped[cleanName] = { name: cleanName, totalMg: 0 };
+                }
+                grouped[cleanName].totalMg += i.servingMg;
+            }
+            
+            const otherIngredientsList = Object.values(grouped)
+                .sort((a, b) => b.totalMg - a.totalMg)
+                .map(g => g.name);
+            
+            calcResult = {
+                breakdown, raw: { totalKcal, totalCarb, totalFiber, totalSugar, totalProtein, totalFat, totalSodium, totalSugarAlcohol },
+                rounded, display, dvPercent, actives, minerals, otherIngredientsList,
+            };
+            
+            renderResult();
+            goToStep('result');
+        }
+        
+        // ============================================================
+        // RENDER RESULT
+        // ============================================================
+        function renderResult() {
+            const r = calcResult.rounded;
+            const d = calcResult.display;
+            const dvP = calcResult.dvPercent;
+            
+            // Render SF Panel
+            let sfHtml = `
+                <div class="sf-title">Supplement Facts</div>
+                <div class="sf-serving-box">
+                    <div class="sf-serving"><strong>Serving Size</strong> ${document.getElementById('serving-size').value}</div>
+                    <div class="sf-serving"><strong>Servings Per Container</strong> ${document.getElementById('servings-container').value}</div>
+                </div>
+                <div class="thick-bar"></div>
+                <div class="sf-header-row">
+                    <span class="sf-label">Amount Per Serving</span>
+                    <span class="sf-dv" style="flex: 1.9; text-align: right;">% Daily Value</span>
+                </div>
+                <div class="med-bar"></div>
+            `;
+            
+            if (d.cal) sfHtml += `<div class="sf-row bold"><span class="sf-label">Calories</span><span class="sf-val" style="font-size: 20px; font-weight: 900;">${r.cal}</span></div>`;
+            if (d.fat) sfHtml += `<div class="sf-row bold"><span class="sf-label">Total Fat</span><span class="sf-val">${r.fat} g</span><span class="sf-dv">${dvP.fat}%</span></div>`;
+            if (d.carb) sfHtml += `<div class="sf-row bold"><span class="sf-label">Total Carbohydrate</span><span class="sf-val">${r.carb} g</span><span class="sf-dv">${dvP.carb}%*</span></div>`;
+            if (d.fiber) sfHtml += `<div class="sf-row indent1"><span class="sf-label">Dietary Fiber</span><span class="sf-val">${r.fiber} g</span><span class="sf-dv">${dvP.fiber}%</span></div>`;
+            if (d.sugar) sfHtml += `<div class="sf-row indent1"><span class="sf-label">Total Sugars</span><span class="sf-val">${r.sugar} g</span></div>`;
+            if (d.sugarAlcohol) sfHtml += `<div class="sf-row indent1"><span class="sf-label">Sugar Alcohols</span><span class="sf-val">${r.sugarAlcohol} g</span></div>`;
+            if (d.protein) sfHtml += `<div class="sf-row bold"><span class="sf-label">Protein</span><span class="sf-val">${r.protein} g</span></div>`;
+            if (d.sodium) sfHtml += `<div class="sf-row"><span class="sf-label">Sodium</span><span class="sf-val">${r.sodium} mg</span><span class="sf-dv">${dvP.sodium}%*</span></div>`;
+            
+            calcResult.minerals.forEach((m, i) => {
+                const dvStr = m.dv ? `${m.dv}%*` : "†";
+                sfHtml += `<div class="sf-row"><span class="sf-label">${m.name}</span><span class="sf-val">${m.amount} ${m.unit}</span><span class="sf-dv">${dvStr}</span></div>`;
+            });
+            
+            if (calcResult.actives.length > 0) {
+                sfHtml += '<div class="thick-bar"></div>';
+                calcResult.actives.forEach((a) => {
+                    sfHtml += `<div class="sf-row"><span class="sf-label">${a.displayName}</span><span class="sf-val">${a.labelClaim}</span><span class="sf-dv">†</span></div>`;
+                });
+            }
+            
+            sfHtml += `
+                <div class="thick-bar"></div>
+                <div class="sf-footer">
+                    * Percent Daily Values are based on a 2,000 calorie diet.<br>
+                    † Daily Value not established.
+                </div>
+            `;
+            
+            document.getElementById('sf-panel-container').innerHTML = sfHtml;
+            document.getElementById('other-ingredients').innerHTML = `<b>Other Ingredients:</b> ${calcResult.otherIngredientsList.join(", ")}.`;
+            
+            // Render breakdown
+            let breakdownHtml = `
+                <div class="breakdown-box">
+                    <p>Raw totals (before FDA rounding):</p>
+                    <div class="breakdown-code">
+                        Calories: ${calcResult.raw.totalKcal.toFixed(2)} kcal → <b>${r.cal}</b><br>
+                        Total Fat: ${calcResult.raw.totalFat.toFixed(3)} g → <b>${r.fat}</b><br>
+                        Total Carb: ${calcResult.raw.totalCarb.toFixed(2)} g → <b>${r.carb}</b><br>
+                        Fiber: ${calcResult.raw.totalFiber.toFixed(3)} g → <b>${r.fiber}</b><br>
+                        Total Sugars: ${calcResult.raw.totalSugar.toFixed(2)} g → <b>${r.sugar}</b><br>
+                        Protein: ${calcResult.raw.totalProtein.toFixed(3)} g → <b>${r.protein}</b><br>
+                        Sodium: ${calcResult.raw.totalSodium.toFixed(2)} mg → <b>${r.sodium}</b><br>
+                    </div>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">Per-ingredient breakdown:</p>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ingredient</th>
+                                <th>mg/serv</th>
+                                <th>kcal</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${calcResult.breakdown.map(b => `
+                                <tr>
+                                    <td style="font-size: 11px;">${b.name}</td>
+                                    <td style="font-size: 11px;">${b.mg.toFixed(2)}</td>
+                                    <td style="font-size: 11px;">${b.kcal.toFixed(2)}</td>
+                                    <td style="font-size: 10px; color: #666;">${b.data ? "USDA" : "—"}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('breakdown-container').innerHTML = breakdownHtml;
+        }
+        
+        // ============================================================
+        // EXPORT FUNCTIONS
+        // ============================================================
+        function exportExcel() {
+            if (!calcResult) return;
+            
+            const r = calcResult.rounded;
+            const d = calcResult.display;
+            const dv = calcResult.dvPercent;
+            
+            const TD = `font-family:Arial; font-size:11pt; color:#000; vertical-align:middle; padding:2px 6px;`;
+            const TBOT = `border-bottom:0.75pt solid #000;`;
+            const RT = `text-align:right;`;
+            const BOLD = `font-weight:bold;`;
+            const I1 = `padding-left:18pt;`;
+            
+            let nutrientRows = "";
+            if (d.fat) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${BOLD} ${TBOT}">Total Fat</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.fat} g</td><td align="right" style="${TD} ${RT} ${TBOT}">${dv.fat}%</td></tr>`;
+            if (d.carb) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${BOLD} ${TBOT}">Total Carbohydrate</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.carb} g</td><td align="right" style="${TD} ${RT} ${TBOT}">${dv.carb}%*</td></tr>`;
+            if (d.fiber) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${I1} ${TBOT}">Dietary Fiber</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.fiber} g</td><td align="right" style="${TD} ${RT} ${TBOT}">${dv.fiber}%</td></tr>`;
+            if (d.sugar) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${I1} ${TBOT}">Total Sugars</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.sugar} g</td><td style="${TD} ${TBOT}"></td></tr>`;
+            if (d.sugarAlcohol) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${I1} ${TBOT}">Sugar Alcohols</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.sugarAlcohol} g</td><td style="${TD} ${TBOT}"></td></tr>`;
+            if (d.protein) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${BOLD} ${TBOT}">Protein</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.protein} g</td><td style="${TD} ${TBOT}"></td></tr>`;
+            if (d.sodium) nutrientRows += `<tr style="height:17pt;"><td style="${TD} ${TBOT}">Sodium</td><td align="right" style="${TD} ${RT} ${TBOT}">${r.sodium} mg</td><td align="right" style="${TD} ${RT} ${TBOT}">${dv.sodium}%*</td></tr>`;
+            
+            calcResult.minerals.forEach((m, i) => {
+                const dvStr = m.dv ? `${m.dv}%*` : "+";
+                nutrientRows += `<tr style="height:17pt;"><td style="${TD}">${m.name}</td><td align="right" style="${TD} ${RT}">${m.amount} ${m.unit}</td><td align="right" style="${TD} ${RT}">${dvStr}</td></tr>`;
+            });
+            
+            let activesRows = "";
+            calcResult.actives.forEach((a, i) => {
+                const isLast = i === calcResult.actives.length - 1;
+                const borderStyle = isLast ? "" : TBOT;
+                activesRows += `<tr style="height:17pt;"><td style="${TD} ${borderStyle}">${a.displayName}</td><td align="right" style="${TD} ${RT} ${borderStyle}">${a.labelClaim}</td><td align="right" style="${TD} ${RT} ${borderStyle}">+</td></tr>`;
+            });
+            
+            const others = calcResult.otherIngredientsList.join(", ");
+            const productName = document.getElementById('product-name').value;
+            
+            const html = `<html><head><meta charset="UTF-8"></head><body>
+            <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:2.25pt solid #000;">
+                <colgroup>
+                    <col width="240" style="width:180pt;">
+                    <col width="110" style="width:82pt;">
+                    <col width="110" style="width:82pt;">
+                </colgroup>
+                <tr style="height:38pt;"><td colspan="3" align="center" style="${TD} font-size:24pt; ${BOLD}">Supplement Facts</td></tr>
+                <tr style="height:17pt;"><td colspan="3" style="${TD} ${BOLD}">Serving Size ${document.getElementById('serving-size').value}</td></tr>
+                <tr style="height:17pt;"><td colspan="3" style="${TD} ${BOLD}">Servings Per Container ${document.getElementById('servings-container').value}</td></tr>
+                <tr style="height:7pt;"><td colspan="3" style="background:#000; height:7pt;">&nbsp;</td></tr>
+                <tr style="height:19pt;">
+                    <td style="${TD} ${BOLD}">Amount Per Serving</td>
+                    <td style="${TD}"></td>
+                    <td align="right" style="${TD} ${BOLD} ${RT}">% Daily Value</td>
+                </tr>
+                <tr style="height:4pt;"><td colspan="3" style="background:#000; height:4pt;">&nbsp;</td></tr>
+                ${d.cal ? `<tr style="height:24pt;"><td style="${TD} ${BOLD} ${TBOT}">Calories</td><td style="${TD} ${TBOT}"></td><td align="right" style="${TD} ${BOLD} ${RT} ${TBOT} font-size:18pt;">${r.cal}</td></tr>` : ""}
+                ${nutrientRows}
+                <tr style="height:7pt;"><td colspan="3" style="background:#000; height:7pt;">&nbsp;</td></tr>
+                ${activesRows}
+                <tr style="height:7pt;"><td colspan="3" style="background:#000; height:7pt;">&nbsp;</td></tr>
+                <tr style="height:14pt;"><td colspan="3" style="${TD} font-size:9pt;">* Percent Daily Values are based on a 2,000 calorie diet.</td></tr>
+                <tr style="height:14pt;"><td colspan="3" style="${TD} font-size:9pt;">+ Daily Value not established.</td></tr>
+            </table>
+            <br>
+            <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                <tr><td colspan="3" style="font-family:Arial; font-size:10pt; padding:6px 0; line-height:1.4;"><b>Other Ingredients:</b> ${others}.</td></tr>
+            </table>
+            </body></html>`;
+            
+            const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${productName.replace(/\s+/g, "_")}_SupplementFacts.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            document.getElementById('export-msg').innerHTML = '<span class="success-msg">✓ Excel downloaded</span>';
+        }
+        
+        function exportPDF() {
+            if (!calcResult) return;
+            
+            const r = calcResult.rounded;
+            const d = calcResult.display;
+            const dvP = calcResult.dvPercent;
+            
+            let nutrientRowsHtml = "";
+            if (d.fat) nutrientRowsHtml += `<div class="sf-row" style="font-weight: 700;"><span class="sf-label">Total Fat</span><span class="sf-val">${r.fat} g</span><span class="sf-dv">${dvP.fat}%</span></div><div class="med-bar"></div>`;
+            if (d.carb) nutrientRowsHtml += `<div class="sf-row" style="font-weight: 700;"><span class="sf-label">Total Carbohydrate</span><span class="sf-val">${r.carb} g</span><span class="sf-dv">${dvP.carb}%*</span></div><div class="med-bar"></div>`;
+            if (d.fiber) nutrientRowsHtml += `<div class="sf-row indent1"><span class="sf-label">Dietary Fiber</span><span class="sf-val">${r.fiber} g</span><span class="sf-dv">${dvP.fiber}%</span></div><div class="med-bar"></div>`;
+            if (d.sugar) nutrientRowsHtml += `<div class="sf-row indent1"><span class="sf-label">Total Sugars</span><span class="sf-val">${r.sugar} g</span></div><div class="med-bar"></div>`;
+            if (d.sugarAlcohol) nutrientRowsHtml += `<div class="sf-row indent1"><span class="sf-label">Sugar Alcohols</span><span class="sf-val">${r.sugarAlcohol} g</span></div><div class="med-bar"></div>`;
+            if (d.protein) nutrientRowsHtml += `<div class="sf-row" style="font-weight: 700;"><span class="sf-label">Protein</span><span class="sf-val">${r.protein} g</span></div><div class="med-bar"></div>`;
+            if (d.sodium) nutrientRowsHtml += `<div class="sf-row"><span class="sf-label">Sodium</span><span class="sf-val">${r.sodium} mg</span><span class="sf-dv">${dvP.sodium}%*</span></div><div class="med-bar"></div>`;
+            
+            calcResult.minerals.forEach((m) => {
+                const dvStr = m.dv ? `${m.dv}%*` : "†";
+                nutrientRowsHtml += `<div class="sf-row"><span class="sf-label">${m.name}</span><span class="sf-val">${m.amount} ${m.unit}</span><span class="sf-dv">${dvStr}</span></div>`;
+            });
+            
+            let activesHtml = "";
+            calcResult.actives.forEach((a) => {
+                activesHtml += `<div class="sf-row"><span class="sf-label">${a.displayName}</span><span class="sf-val">${a.labelClaim}</span><span class="sf-dv">†</span></div>`;
+            });
+            
+            const others = calcResult.otherIngredientsList.join(", ");
+            const productName = document.getElementById('product-name').value;
+            
+            const html = `<!DOCTYPE html>
+            <html><head><meta charset="UTF-8">
+            <title>${productName} - Supplement Facts</title>
+            <style>
+                @page { margin: 15mm; }
+                body { font-family: Arial, sans-serif; margin: 30px; color: #000; }
+                .sf-box { border: 3px solid #000; width: 420px; font-family: Arial; font-size: 12px; }
+                .sf-title { font-size: 30px; font-weight: 900; padding: 6px 12px; text-align: center; line-height: 1; }
+                .sf-serving { padding: 4px 12px; font-size: 11pt; }
+                .thick-bar { background: #000; height: 10px; }
+                .med-bar { background: #000; height: 5px; }
+                .sf-row { display: flex; padding: 3px 10px; align-items: center; min-height: 22px; font-size: 12px; }
+                .sf-row.indent1 { padding-left: 26px; }
+                .sf-label { flex: 2.2; }
+                .sf-val { flex: 1; text-align: right; }
+                .sf-dv { flex: 0.9; text-align: right; }
+                .sf-footer { padding: 6px 12px; font-size: 10px; line-height: 1.6; }
+                .other-below { font-size: 10pt; margin-top: 12px; line-height: 1.6; width: 420px; }
+                .print-btn { padding: 12px 24px; font-size: 14px; cursor: pointer; background: #3b82f6; color: white; border: none; border-radius: 6px; margin-top: 20px; }
+                @media print { .print-btn { display: none; } }
+            </style>
+            </head><body>
+            <div class="sf-box">
+                <div class="sf-title">Supplement Facts</div>
+                <div class="sf-serving">
+                    <div><b>Serving Size</b> ${document.getElementById('serving-size').value}</div>
+                    <div><b>Servings Per Container</b> ${document.getElementById('servings-container').value}</div>
+                </div>
+                <div class="thick-bar"></div>
+                <div class="sf-row" style="font-weight: 700;"><span class="sf-label">Amount Per Serving</span><span class="sf-dv">% Daily Value</span></div>
+                <div class="med-bar"></div>
+                ${d.cal ? `<div class="sf-row" style="font-weight: 700;"><span class="sf-label">Calories</span><span class="sf-val" style="font-size: 18px; font-weight: 900;">${r.cal}</span></div><div class="med-bar"></div>` : ''}
+                ${nutrientRowsHtml}
+                ${calcResult.actives.length > 0 ? '<div class="thick-bar"></div>' : ''}
+                ${activesHtml}
+                <div class="thick-bar"></div>
+                <div class="sf-footer">
+                    * Percent Daily Values are based on a 2,000 calorie diet.<br>
+                    † Daily Value not established.
+                </div>
+            </div>
+            <div class="other-below">
+                <b>Other Ingredients:</b> ${others}.
+            </div>
+            <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+            <script>
+                window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 500); });
+            <\/script>
+            </body></html>`;
+            
+            const win = window.open("", "_blank");
+            if (win) {
+                win.document.write(html);
+                win.document.close();
+            }
+            
+            document.getElementById('export-msg').innerHTML = '<span class="success-msg">✓ PDF print dialog opened</span>';
+        }
+        
+        function reset() {
+            ingredients = [];
+            calcResult = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('product-name').value = '';
+            document.getElementById('serving-size').value = '';
+            document.getElementById('servings-container').value = '';
+            document.getElementById('export-msg').innerHTML = '';
+            goToStep('upload');
+        }
+    </script>
+</body>
+</html>
